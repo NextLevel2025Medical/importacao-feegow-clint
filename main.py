@@ -63,6 +63,22 @@ rl = RateLimiter(RATE_LIMIT_RPS)
 def db():
     return psycopg.connect(DATABASE_URL)
 
+def ensure_tables(conn):
+    with conn.cursor() as cur:
+        cur.execute("""
+        create table if not exists clint_deal_ingest (
+          proposal_id bigint primary key,
+          paciente_id bigint not null,
+          proposal_last_update timestamp,
+          value numeric,
+          created_at timestamp default now(),
+          clint_deal_id text,
+          status text not null default 'PENDING', -- PENDING | DONE | ERROR
+          last_error text,
+          attempts int not null default 0
+        );
+        """)
+
 def feegow_get(path, params=None):
     def _call():
         rl.wait()
@@ -177,6 +193,9 @@ def build_clint_payload(proposal, patient):
 def main():
     with db() as conn:
         conn.autocommit = False
+
+        ensure_tables(conn)
+        conn.commit()
 
         watermark = get_last_watermark(conn)
         cutoff = (now_utc().replace(tzinfo=None) - timedelta(minutes=POLL_OVERLAP_MINUTES))
