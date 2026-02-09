@@ -73,7 +73,7 @@ def ensure_tables(conn):
           value numeric,
           created_at timestamp default now(),
           clint_deal_id text,
-          status text not null default 'PENDING', -- PENDING | DONE | ERROR
+          status text not null default 'PENDING',
           last_error text,
           attempts int not null default 0
         );
@@ -210,11 +210,7 @@ def main():
             # exemplo: "2026-02-02 13:41:45"
             return datetime.strptime(s, "%Y-%m-%d %H:%M:%S")
 
-        candidates = []
-        for p in proposals:
-            lu = parse_last_update(p)
-            if lu is None or lu >= cutoff:
-                candidates.append(p)
+        candidates = proposals
 
         candidates = sorted(candidates, key=lambda x: x.get("proposal_id", 0))[:MAX_PROPOSALS_PER_RUN]
 
