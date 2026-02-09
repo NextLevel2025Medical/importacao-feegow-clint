@@ -10,10 +10,10 @@ from datetime import datetime, timedelta, timezone
 FEEGOW_BASE = "https://api.feegow.com/v1/api"
 CLINT_BASE = "https://api.clint.digital/v1"
 
-FEEGOW_TOKEN = os.environ["eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJmZWVnb3ciLCJhdWQiOiJwdWJsaWNhcGkiLCJpYXQiOjE3NTIwOTAxNDMsImxpY2Vuc2VJRCI6MTgxNzd9.IKSrMJyl2Pnn7ia7iOs0--fWIys_O6aW0WaFhulz2DE"]          # x-access-token
-CLINT_TOKEN = os.environ["U2FsdGVkX181aE+YGeoGadGfJn71jX4fkNE36jUhEfYoSyc/NYM+UlSjZ1C09v6u2gGG/0XaU68rVgaxQMZQ9A=="]        # api-token
-CLINT_ORIGIN_ID = os.environ["4a600992-3764-43ab-8478-ad891d0f263b"]    # fixo
-DATABASE_URL = os.environ["DATABASE_URL"]
+FEEGOW_TOKEN = os.environ["FEEGOW_TOKEN"]        # x-access-token
+CLINT_TOKEN = os.environ["CLINT_API_TOKEN"]      # api-token
+CLINT_ORIGIN_ID = os.environ["CLINT_ORIGIN_ID"]  # fixo
+DATABASE_URL = os.environ["DATABASE_URL"]        # postgres
 
 # ---- ajustes finos ----
 POLL_OVERLAP_MINUTES = 10     # segurança: revarre últimos 10min (sem duplicar)
