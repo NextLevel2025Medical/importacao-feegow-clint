@@ -6,6 +6,7 @@ import random
 import requests
 import psycopg
 from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 FEEGOW_BASE = "https://api.feegow.com/v1/api"
 CLINT_BASE = "https://api.clint.digital/v1"
@@ -154,15 +155,36 @@ def mark_error(conn, proposal_id, err):
         """, (str(err)[:800], proposal_id))
 
 def fetch_proposals_window():
-    # Feegow filtra por data; então pegamos hoje (e opcionalmente ontem se quiser 100% seguro no virar do dia)
-    today = now_utc().astimezone().date()
-    params = {
-        "data_inicio": br_date(datetime.combine(today, datetime.min.time())),
-        "data_fim": br_date(datetime.combine(today, datetime.min.time())),
-        "tipo_data": "I",
-    }
+    # ✅ Data no fuso do Brasil (evita qualquer divergência com o Postman)
+    tz = ZoneInfo("America/Sao_Paulo")
+    today_br = datetime.now(tz).date()
+
+    # ✅ Permite testar datas específicas pelo Render ENV, se quiser
+    start = os.getenv("FEEGOW_START_DATE")  # formato: dd-mm-aaaa
+    end = os.getenv("FEEGOW_END_DATE")      # formato: dd-mm-aaaa
+
+    if not start:
+        start = today_br.strftime("%d-%m-%Y")
+    if not end:
+        end = today_br.strftime("%d-%m-%Y")
+
+    params = {"data_inicio": start, "data_fim": end, "tipo_data": "I"}
+
     data = feegow_get("/proposal/list", params=params)
-    return data.get("content", []) if data.get("success") else []
+
+    # ✅ LOG DE PROVA (não expõe token)
+    print("FEEGOW proposal/list params:", params)
+    print("FEEGOW success:", data.get("success"))
+    content = data.get("content", []) or []
+    print("FEEGOW content length:", len(content))
+    if content:
+        first = content[0]
+        print("FEEGOW first proposal_id:", first.get("proposal_id"),
+              "proposal_date:", first.get("proposal_date"),
+              "last_update:", first.get("proposal_last_update"))
+
+    return content if data.get("success") else []
+
 
 def patient_details(paciente_id: int):
     data = feegow_get("/patient/search", params={
@@ -181,7 +203,7 @@ def build_clint_payload(proposal, patient):
     value = proposal.get("value") or 0
 
     # Dica: embutir o proposal_id no nome ajuda MUITO a rastrear
-    deal_name = f"{name} - Proposta #{proposal['proposal_id']}"
+    deal_name = name
 
     return {
         "origin_id": CLINT_ORIGIN_ID,
